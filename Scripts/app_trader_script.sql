@@ -74,8 +74,14 @@ SELECT name, a.price AS apple_price, p.price AS google_price, a.review_count AS 
 FROM app_store_apps AS a
 LEFT JOIN play_store_apps AS p
 USING (name)
-WHERE a.rating >= 4.5 AND p.rating >= 4.5 AND a.price = 0.00 AND p.price = '0'
+WHERE a.rating >= 4.5 AND (a.rating+p.rating) >= 8.8 AND a.price = 0.00 AND p.price = '0'
 ORDER BY total_rating DESC;
 
+SELECT name, a.price AS apple_price, p.price AS google_price, a.review_count AS apple_review_count, p.review_count AS google_review_count, p.install_count, a.rating AS apple_rating, p.rating AS google_rating, (a.rating+p.rating) AS total_rating, a.content_rating AS apple_content, p.content_rating AS google_content
+FROM app_store_apps AS a
+LEFT JOIN play_store_apps AS p
+USING (name)
+WHERE (a.rating+p.rating) >= 9.3 AND p.review_count > 1000
+ORDER BY total_rating DESC;
 
-
+SELECT 
