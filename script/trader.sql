@@ -46,27 +46,48 @@ order by avg_rating desc;
   "Mature 17+" 4.1234273318872017
   "Unrated"	4.1000000000000000 */
   
- WITH prices as 
+ WITH price_table as 
    (SELECT DISTINCT name,
     CASE 
         WHEN money(p.price) = money(0) THEN money(1)
         ELSE money(p.price) 
-    END as google_price, 
+    END as play_price, 
     CASE 
         WHEN money(a.price) = money(0) THEN money(1)
         ELSE money(a.price) 
     END as apple_price
     FROM play_store_apps as p
-    INNER JOIN app_store_apps as a USING(name))
-SELECT DISTINCT name, ((apple_price + google_price) * 10000) as purchase_price, p.rating + a.rating as combined_rating
+    INNER JOIN app_store_apps as a USING(name)),
+    
+    ad_cost AS(
+     SELECT name, money(((ROUND((AVG((a.rating+p.rating)/2)/.5))+1)*12)*1000) as ad_cost
+    FROM play_store_apps as p
+    INNER JOIN app_store_apps as a USING(name)
+    GROUP BY name
+    ORDER BY ad_cost DESC),
+    
+    revenue AS(
+    SELECT name, money(((ROUND((AVG((a.rating+p.rating)/2)/.5))+1)*12)*5000) as revenue
+    FROM play_store_apps as p
+    INNER JOIN app_store_apps as a USING(name)
+    GROUP BY name
+    ORDER BY revenue DESC)
+    
+SELECT DISTINCT category, SUM(((apple_price + play_price) * 10000)) as purchase_price, SUM(money(r.revenue - (((apple_price + play_price) * 10000) +a2.ad_cost))) AS profit,
+ ROUND(SUM(money(r.revenue - (((apple_price + play_price) * 10000) +a2.ad_cost)))/SUM(((apple_price + play_price) * 10000))*100) as percent_return
 FROM play_store_apps as p
 INNER JOIN app_store_apps as a USING(name)
-INNER JOIN prices as c USING(name)
-where p.rating > 4
+INNER JOIN price_table as p2 USING(name)
+INNER JOIN ad_cost as a2 USING(name)
+INNER JOIN revenue as r USING (name)
+where p.rating >4
 and a.rating >4
-and p.review_count > 10000
-ORDER BY combined_rating desc; 
--- Price for highest combined_rated apps
+and p.review_count >10000
+and CAST(a.review_count as numeric)>10000
+group by category
+ORDER BY percent_return desc; 
+
+
 
 
  
