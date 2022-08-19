@@ -1,13 +1,13 @@
-select name, a.review_count as app_review, p.review_count as play_review, a.rating as a_rating, p.rating as p_rating, genres, primary_genre, p.price as play_price, a.price as a_price
+select distinct name, a.rating as a_rating, p.rating as p_rating, a.rating+p.rating as total_rating, genres, primary_genre, p.price as play_price, a.price as a_price
 from play_store_apps as p
 inner join app_store_apps as a
 using(name)
 where p.rating >= 4.5
 and a.rating >= 4.5
 and p.review_count > 25000
-order by p.rating desc, a.rating desc
-limit 25;
--- 20 of the top 25 rated games are free to play on both apps
+order by total_rating desc
+limit 10;
+-- "PewDiePie's Tuber Simulator" "ASOS" "Cytus" "Domino's Pizza USA" "Egg, Inc." "The Guardian" "Geometry Dash Lite" "Fernanfloo" "Bible" "Five Nights at Freddy's 3"
 
 select genres, category, avg(rating) as avg_rating
 from play_store_apps
@@ -45,6 +45,24 @@ order by avg_rating desc;
   "Everyone" 4.1863746630727763
   "Mature 17+" 4.1234273318872017
   "Unrated"	4.1000000000000000 */
+  
+with total_income_table AS(
+Select )
+
+select distinct name, a.rating as a_rating, p.rating as p_rating, ROUND(a.rating)+(p.rating) as total_rating, genres, primary_genre, p.price as play_price, a.price as a_price
+from play_store_apps as p
+inner join app_store_apps as a
+using(name)
+where p.rating >= 4.5
+and a.rating >= 4.5
+and p.review_count > 25000
+order by total_rating desc
+limit 10;
+  
+
+ 
+  
+
 
 
 
