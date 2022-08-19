@@ -38,9 +38,9 @@ FROM play_store_apps as g1
 INNER JOIN app_store_apps as a1 USING(name)
 GROUP BY name
 ORDER BY total_reviews DESC;
--- Facebook, WhatsApp, Insta, Clash of Clans, and Subway Surfers.
+-- Facebook, WhatsApp, Insta, Clash of Clans, and Subway Surfers .
 
--- App life spans:
+-- App life spans(months):
 SELECT name, (ROUND((AVG((a1.rating+g1.rating)/2)/.5))+1)*12 as relevant_months
 FROM play_store_apps as g1
 INNER JOIN app_store_apps as a1 USING(name)
@@ -66,3 +66,58 @@ FROM play_store_apps as g1
 INNER JOIN app_store_apps as a1 USING(name)
 INNER JOIN prices as p1 USING(name)
 ORDER BY purchase_price DESC;
+-- 
+
+-- Advertsing cost for each app:
+SELECT name, money(((ROUND((AVG((a1.rating+g1.rating)/2)/.5))+1)*12)*1000) as ad_cost
+FROM play_store_apps as g1
+INNER JOIN app_store_apps as a1 USING(name)
+GROUP BY name
+ORDER BY ad_cost DESC;
+--
+
+-- Potential revenue of app:
+SELECT name, money(((ROUND((AVG((a1.rating+g1.rating)/2)/.5))+1)*12)*5000) as revenue
+FROM play_store_apps as g1
+INNER JOIN app_store_apps as a1 USING(name)
+GROUP BY name
+ORDER BY revenue DESC;
+-- 
+
+-- Net profit for each app:
+WITH purchase_price AS
+   (SELECT DISTINCT name,
+    CASE 
+        WHEN money(g1.price) = money(0) THEN money(1)
+        ELSE money(g1.price) 
+    END as google_purchase_price, 
+    CASE 
+        WHEN money(a1.price) = money(0) THEN money(1)
+        ELSE money(a1.price) 
+    END as apple_purchase_price
+    FROM play_store_apps as g1
+    INNER JOIN app_store_apps as a1 USING(name)),
+    
+advertising_cost AS
+   (SELECT name, money(((ROUND((AVG((a1.rating+g1.rating)/2)/.5))+1)*12)*1000) as ad_cost
+    FROM play_store_apps as g1
+    INNER JOIN app_store_apps as a1 USING(name)
+    GROUP BY name
+    ORDER BY ad_cost DESC),
+    
+revenue AS
+   (SELECT name, money(((ROUND((AVG((a1.rating+g1.rating)/2)/.5))+1)*12)*5000) as revenue
+    FROM play_store_apps as g1
+    INNER JOIN app_store_apps as a1 USING(name)
+    GROUP BY name
+    ORDER BY revenue DESC)
+
+SELECT name, 
+money(r1.revenue - (((p1.apple_purchase_price + p1.google_purchase_price) * 10000) + a2.ad_cost)) AS profit
+FROM play_store_apps as g1
+INNER JOIN app_store_apps as a1 USING(name)
+INNER JOIN purchase_price as p1 USING(name)
+INNER JOIN advertising_cost as a2 USING(name)
+INNER JOIN revenue as r1 USING(name)
+GROUP BY name, r1.revenue, p1.apple_purchase_price, p1.google_purchase_price, a2.ad_cost
+ORDER BY profit DESC;
