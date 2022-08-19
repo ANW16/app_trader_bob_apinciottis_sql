@@ -41,9 +41,28 @@ ORDER BY total_reviews DESC;
 -- Facebook, WhatsApp, Insta, Clash of Clans, and Subway Surfers.
 
 -- App life spans:
-SELECT name, ROUND((AVG((a1.rating+g1.rating)/2)/.5))+1 as relevant_years
+SELECT name, (ROUND((AVG((a1.rating+g1.rating)/2)/.5))+1)*12 as relevant_months
 FROM play_store_apps as g1
 INNER JOIN app_store_apps as a1 USING(name)
 GROUP BY name
-ORDER BY relevant_years DESC;
--- 
+ORDER BY relevant_months DESC;
+-- There are eight apps with a life span of 11 years/132 months .
+
+-- App purchase cost:
+WITH prices as 
+   (SELECT DISTINCT name,
+    CASE 
+        WHEN money(g1.price) = money(0) THEN money(1)
+        ELSE money(g1.price) 
+    END as google_price, 
+    CASE 
+        WHEN money(a1.price) = money(0) THEN money(1)
+        ELSE money(a1.price) 
+    END as apple_price
+    FROM play_store_apps as g1
+    INNER JOIN app_store_apps as a1 USING(name))
+SELECT DISTINCT name, ((apple_price + google_price) * 10000) as purchase_price
+FROM play_store_apps as g1
+INNER JOIN app_store_apps as a1 USING(name)
+INNER JOIN prices as p1 USING(name)
+ORDER BY purchase_price DESC;
