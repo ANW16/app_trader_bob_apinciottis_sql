@@ -46,20 +46,30 @@ order by avg_rating desc;
   "Mature 17+" 4.1234273318872017
   "Unrated"	4.1000000000000000 */
   
-with total_income_table AS(
-Select )
+ WITH prices as 
+   (SELECT DISTINCT name,
+    CASE 
+        WHEN money(p.price) = money(0) THEN money(1)
+        ELSE money(p.price) 
+    END as google_price, 
+    CASE 
+        WHEN money(a.price) = money(0) THEN money(1)
+        ELSE money(a.price) 
+    END as apple_price
+    FROM play_store_apps as p
+    INNER JOIN app_store_apps as a USING(name))
+SELECT DISTINCT name, ((apple_price + google_price) * 10000) as purchase_price, p.rating + a.rating as combined_rating
+FROM play_store_apps as p
+INNER JOIN app_store_apps as a USING(name)
+INNER JOIN prices as c USING(name)
+where p.rating > 4
+and a.rating >4
+and p.review_count > 10000
+ORDER BY combined_rating desc; 
+-- Price for highest combined_rated apps
 
-select distinct name, a.rating as a_rating, p.rating as p_rating, ROUND(a.rating)+(p.rating) as total_rating, genres, primary_genre, p.price as play_price, a.price as a_price
-from play_store_apps as p
-inner join app_store_apps as a
-using(name)
-where p.rating >= 4.5
-and a.rating >= 4.5
-and p.review_count > 25000
-order by total_rating desc
-limit 10;
-  
 
+ 
  
   
 
