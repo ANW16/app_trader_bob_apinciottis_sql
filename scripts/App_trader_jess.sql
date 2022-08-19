@@ -25,7 +25,7 @@ limit 10
 select name,rating, review_count, primary_genre
 from app_store_apps
 where review_count>50
-order by rating desc
+order by rating desc, review_count desc
 
 select distinct name, rating, review_count, genres
 from play_store_apps
@@ -54,11 +54,12 @@ from app_store_apps
 select *
 from play_store_apps
 
-select distinct(primary_genre), count(name)
+select distinct(primary_genre), avg(rating)
 from app_store_apps
 group by primary_genre
-order by count DESC
-select distinct(genres), COUNT(name)
+order by rating DESC
+
+select distinct(genres), count(name)
 from play_store_apps
 group by genres
 order by count desc
