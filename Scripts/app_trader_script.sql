@@ -123,13 +123,21 @@ WHERE a.price = 0.00 AND p.price = '0'
 GROUP BY name, a.rating, p.rating
 ORDER BY expected_profit DESC;                   ROUND(p.rating*2,0)/2
 
-SELECT name, a.rating AS apple_rating, p.rating AS play_rating,
+WITH dollars AS
+   (SELECT name, a.rating AS apple_rating, p.rating AS play_rating,
        '20000' AS purchase_cost, ((a.rating/.5+1)*12) AS apple_longevity_months, (((ROUND(p.rating*2,0)/2)/.5+1)*12) AS play_longevity_months,
        ((a.rating/.5+1)*12) +  (((ROUND(p.rating*2,0)/2)/.5+1)*12) AS total_months,
-        (((a.rating/.5+1)*12) +  (((ROUND(p.rating*2,0)/2)/.5+1)*12)) * 4000 AS total_revenue           
+        CAST((((a.rating/.5+1)*12) +  (((ROUND(p.rating*2,0)/2)/.5+1)*12)) AS money) * 4000 AS total_revenue           
        FROM app_store_apps AS a
     INNER JOIN play_store_apps AS p
     USING (name)
 WHERE a.price = 0.00 AND p.price = '0' 
 GROUP BY name, a.rating, p.rating
-ORDER BY total_months DESC;
+ORDER BY total_months DESC)
+
+SELECT name, ROUND(total_months,0) AS total_longevity_months, total_revenue, total_revenue-CAST(20000 AS money) AS total_profit
+   FROM play_store_apps
+   INNER JOIN dollars
+   USING (name)
+GROUP BY name, dollars.total_revenue, dollars.total_months, total_profit
+ORDER BY total_profit DESC;
