@@ -70,18 +70,66 @@ USING (name)
 WHERE p.install_count IS NOT NULL AND a.rating >= 4.5 AND p.rating >= 4.5
 ORDER BY total_rating DESC;
 
-SELECT name, a.price AS apple_price, p.price AS google_price, a.review_count AS apple_review_count, p.review_count AS google_review_count, p.install_count, a.rating AS apple_rating, p.rating AS google_rating, (a.rating+p.rating) AS total_rating, a.content_rating AS apple_content, p.content_rating AS google_content
+SELECT DISTINCT name, a.price AS apple_price, p.price AS google_price, a.review_count AS apple_review_count, p.review_count AS google_review_count, p.install_count, a.rating AS apple_rating, p.rating AS google_rating, (a.rating+p.rating) AS total_rating, a.content_rating AS apple_content, p.content_rating AS google_content
 FROM app_store_apps AS a
-LEFT JOIN play_store_apps AS p
+INNER JOIN play_store_apps AS p
 USING (name)
-WHERE a.rating >= 4.5 AND (a.rating+p.rating) >= 8.8 AND a.price = 0.00 AND p.price = '0'
+WHERE (a.rating+p.rating) >= 8.8 AND a.price = 0.00 AND p.price = '0'
 ORDER BY total_rating DESC;
 
 SELECT name, a.price AS apple_price, p.price AS google_price, a.review_count AS apple_review_count, p.review_count AS google_review_count, p.install_count, a.rating AS apple_rating, p.rating AS google_rating, (a.rating+p.rating) AS total_rating, a.content_rating AS apple_content, p.content_rating AS google_content
 FROM app_store_apps AS a
 LEFT JOIN play_store_apps AS p
 USING (name)
-WHERE (a.rating+p.rating) >= 9.3 AND p.review_count > 1000
+WHERE (a.rating+p.rating) >= 9 -- AND p.review_count > 1000
 ORDER BY total_rating DESC;
 
-SELECT 
+WITH profit AS 
+    (SELECT name, 
+     ROUND((4000*
+            ((
+                (a.rating/.5)+1)+(
+                    (p.rating/.5)+1)*12))-20000,2) AS expected_profit 
+    FROM app_store_apps AS a
+    INNER JOIN play_store_apps AS p
+    USING (name)
+WHERE a.price = 0.00 AND p.price = '0' 
+GROUP BY name, a.rating, p.rating
+ORDER BY expected_profit DESC;
+
+ /* names AS 
+    (SELECT name
+    FROM app_store_apps
+    INNER JOIN play_store_apps) */
+    
+SELECT DISTINCT name, 
+        expected_profit
+FROM app_store_apps
+INNER JOIN profit
+USING (name)
+ORDER BY expected_profit DESC;
+     
+SELECT name, ROUND(rating 
+     FROM app_store_apps
+     ORDER BY rating DESC;
+                   
+                   
+SELECT name, a.rating AS apple_rating, p.rating AS play_rating, 
+     ROUND((4000*((((ROUND(a.rating*2,0)/2)/.5)+1)+(((ROUND(p.rating*2,0)/2)/.5)+1)*12))-20000,2) AS expected_profit 
+    FROM app_store_apps AS a
+    INNER JOIN play_store_apps AS p
+    USING (name)
+WHERE a.price = 0.00 AND p.price = '0' 
+GROUP BY name, a.rating, p.rating
+ORDER BY expected_profit DESC;                   ROUND(p.rating*2,0)/2
+
+SELECT name, a.rating AS apple_rating, p.rating AS play_rating,
+       '20000' AS purchase_cost, ((a.rating/.5+1)*12) AS apple_longevity_months, (((ROUND(p.rating*2,0)/2)/.5+1)*12) AS play_longevity_months,
+       ((a.rating/.5+1)*12) +  (((ROUND(p.rating*2,0)/2)/.5+1)*12) AS total_months,
+        (((a.rating/.5+1)*12) +  (((ROUND(p.rating*2,0)/2)/.5+1)*12)) * 4000 AS total_revenue           
+       FROM app_store_apps AS a
+    INNER JOIN play_store_apps AS p
+    USING (name)
+WHERE a.price = 0.00 AND p.price = '0' 
+GROUP BY name, a.rating, p.rating
+ORDER BY total_months DESC;
