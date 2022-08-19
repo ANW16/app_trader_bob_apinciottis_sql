@@ -27,15 +27,23 @@ from app_store_apps
 where review_count>50
 order by rating desc
 
-select name, rating, review_count, genres
+select distinct name, rating, review_count, genres
 from play_store_apps
 where rating is not null and review_count>50
-ORDER BY rating DESC
+ORDER BY rating desc, review_count DESC;
 
 /*most installs from play store*/
-select name,genres, cast (install_count as numeric)
+select a.name, rating, review_count
 from play_store_apps
-order by install_count DESC
+where rating is not NULL and review_count >50
+order by rating DESC, review_count DESC
+
+/*1st join on name*/
+select a.name, a.rating as, p.rating, a.review_count, p.review_count
+from app_store_apps as a
+LEFT JOIN play_store_apps as p
+on a.name = p.name
+
 
 /*sanity check
 select *
