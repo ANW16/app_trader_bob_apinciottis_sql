@@ -25,12 +25,14 @@ Where rating is not null
 Group by primary_genre, review_count
 Order by avg_rating desc
 Limit 10;
+--top genres by install/review count and price.....
+Select genres as Playstore_genres, money(p.price), p.install_count, primary_genre as Google_genres, money(a.price), a.review_count
+From play_store_apps as p
+Join app_store_apps as a
+Using(name)
+Order by money(p.price) desc, money(a.price) desc;
 
-Select distinct money(price), install_count,
-    category
-From play_store_apps
-Group by price, category,install_count
-Order by money(price) desc;
+
 
 Select distinct category, round(avg(rating),2) as rating
 from play_store_apps
@@ -47,30 +49,30 @@ Order By p.name,a.name desc;
 
 -- Projected Longevity(Apps in both stores AND apps with rating >= 3.5 in both stores)
 Select distinct p.name, round(p.rating*2,0)/2 as Playstore_rating, 
-    Case When Round(p.rating*2,0)/2 = '0' Then '1 year'
-        When Round(p.rating*2,0)/2 = '0.5' Then '2 years'
-        When Round(p.rating*2,0)/2 = '1.0' Then '3 years'
-        When Round(p.rating*2,0)/2 = '1.5' Then '4 years'
-        When Round(p.rating*2,0)/2 = '2.0' Then '5 years'
-        When Round(p.rating*2,0)/2 = '2.5' Then '6 years'
-        When Round(p.rating*2,0)/2 = '3.0' Then '7 years'
-        When Round(p.rating*2,0)/2 = '3.5' Then '8 years'
-        When Round(p.rating*2,0)/2 = '4.0' Then '9 years'
-        When Round(p.rating*2,0)/2 = '4.5' Then '10 years'
-        When Round(p.rating*2,0)/2 = '5.0' Then '10+ years'
+    Case When Round(p.rating*2,0)/2 = '0' Then '12mo'
+        When Round(p.rating*2,0)/2 = '0.5' Then '24mo'
+        When Round(p.rating*2,0)/2 = '1.0' Then '36mo'
+        When Round(p.rating*2,0)/2 = '1.5' Then '48mo'
+        When Round(p.rating*2,0)/2 = '2.0' Then '60mo'
+        When Round(p.rating*2,0)/2 = '2.5' Then '72mo'
+        When Round(p.rating*2,0)/2 = '3.0' Then '84mo'
+        When Round(p.rating*2,0)/2 = '3.5' Then '96mo'
+        When Round(p.rating*2,0)/2 = '4.0' Then '108mo'
+        When Round(p.rating*2,0)/2 = '4.5' Then '120mo'
+        When Round(p.rating*2,0)/2 = '5.0' Then '132mo'
         End as Playstore_Projected_Longevity,
  a.name, Round(a.rating*2,0)/2 as Apple_rating,   
-    Case When Round(a.rating*2,0)/2 = '0' Then '1 year'
-        When Round(a.rating*2,0)/2 = '0.5' Then '2 years'
-        When Round(a.rating*2,0)/2 = '1.0' Then '3 years'
-        When Round(a.rating*2,0)/2 = '1.5' Then '4 years'
-        When Round(a.rating*2,0)/2 = '2.0' Then '5 years'
-        When Round(a.rating*2,0)/2 = '2.5' Then '6 years'
-        When Round(a.rating*2,0)/2 = '3.0' Then '7 years'
-        When Round(a.rating*2,0)/2 = '3.5' Then '8 years'
-        When Round(a.rating*2,0)/2 = '4.0' Then '9 years'
-        When Round(a.rating*2,0)/2 = '4.5' Then '10 years'
-        When Round(a.rating*2,0)/2 = '5.0' Then '10+ years'
+    Case When Round(a.rating*2,0)/2 = '0' Then '12mo'
+        When Round(a.rating*2,0)/2 = '0.5' Then '24mo'
+        When Round(a.rating*2,0)/2 = '1.0' Then '36mo'
+        When Round(a.rating*2,0)/2 = '1.5' Then '48mo'
+        When Round(a.rating*2,0)/2 = '2.0' Then '60mo'
+        When Round(a.rating*2,0)/2 = '2.5' Then '72mo'
+        When Round(a.rating*2,0)/2 = '3.0' Then '84mo'
+        When Round(a.rating*2,0)/2 = '3.5' Then '96mo'
+        When Round(a.rating*2,0)/2 = '4.0' Then '108mo'
+        When Round(a.rating*2,0)/2 = '4.5' Then '120mos'
+        When Round(a.rating*2,0)/2 = '5.0' Then '132mo'
         End as Apple_Projected_Longevity   
 From play_store_apps as p
 Join app_store_apps as a
