@@ -181,7 +181,7 @@ SELECT COUNT(name), category AS play_category, genres AS play_genres, primary_ge
 FROM play_store_apps AS p
 INNER JOIN app_store_apps AS a
 USING (name)
-WHERE a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+WHERE a.rating IS NOT NULL AND p.rating IS NOT NULL /* AND p.price = '0' AND a.price = 0.00 */
 GROUP BY play_category, play_genres, apple_genre
 HAVING COUNT(name) >= 10
 ORDER BY avg_rating DESC, COUNT(name) DESC;
@@ -191,7 +191,7 @@ SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p
 FROM app_store_apps AS a
 INNER JOIN play_store_apps AS p
 USING (name)
-WHERE p.category = 'GAME' AND p.genres = 'Casual' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+WHERE a.primary_genre = 'Games' /* AND p.genres = 'Casual' */ AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
 GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
 ORDER BY total_rating DESC;
                    
@@ -215,7 +215,7 @@ SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p
 FROM app_store_apps AS a
 INNER JOIN play_store_apps AS p
 USING (name)
-WHERE p.category = 'COMMUNICATION' AND p.genres = 'Communication' AND a.primary_genre = 'Social Networking' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+WHERE p.category = 'COMMUNICATION' AND p.genres = 'Communication' /* AND a.primary_genre = 'Social Networking' */ AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
 GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
 ORDER BY total_rating DESC;  
                    
