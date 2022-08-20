@@ -156,10 +156,14 @@ WITH apple_cost_table AS(
         ELSE CAST(REPLACE(price, '$','') AS numeric) * 10000
         END AS google_cost
         FROM play_store_apps)
+       
 
 SELECT DISTINCT name,
-    CAST(4000 * ((ROUND((ROUND(((a1.rating * CAST(a1.review_count AS int)) + (p1.rating * p1.review_count))/(CAST(a1.review_count AS int) + p1.review_count),1)/.5),0)+1) * 12) - (apple_cost + google_cost) AS money) AS total_roi,
-    CAST((4000 * 12) - (apple_cost + google_cost) AS money) AS one_year_ROI,
+    CAST(4000 * ((ROUND((ROUND(((a1.rating * CAST(a1.review_count AS int)) + (p1.rating * p1.review_count))/(CAST(a1.review_count AS int) + p1.review_count),1)/.5),0)+1) * 12) - (apple_cost + google_cost) AS money) AS total_ROI,
+    CAST(4000 * 12 - (apple_cost + google_cost) AS money) AS one_year_ROI,
+    CAST(4000 * 36 - (apple_cost + google_cost) AS money) AS three_year_ROI,
+    CAST(4000 * 60 - (apple_cost + google_cost) AS money) AS five_year_ROI,
+    CAST(4000 * 84 - (apple_cost + google_cost) AS money) AS seven_year_ROI,
     CAST(apple_cost AS money),
     CAST(google_cost AS money),
     CAST((apple_cost + google_cost) AS money) AS total_cost,
@@ -183,4 +187,4 @@ FROM app_store_apps as a1
     USING (name)
     LEFT JOIN google_cost_table
     USING (name)
-ORDER BY total_roi DESC;
+ORDER BY total_roi DESC, combined_rating DESC;
