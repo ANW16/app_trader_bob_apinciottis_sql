@@ -1,4 +1,7 @@
-Select * From play_store_apps;
+Select * From play_store_apps
+Join app_store_apps
+Using (name)
+order by  name desc;
 
 Select * From app_store_apps;
 
@@ -80,4 +83,42 @@ Using (name)
 Where p.rating >= '3.5'
     And a.rating >= '3.5'
 Group by p.name,p.rating,a.name,a.rating
-Order by p.name,a.name desc;
+Order by playstore_projected_longevity, apple_projected_longevity desc;
+
+--Top 10 apps w/ content_rating by avg_combined_rating
+Select a.name,
+    a.content_rating,
+    p.name,
+    p.content_rating,
+    avg(a.rating+p.rating) as avg_combined_rating
+From app_store_apps as a
+Join play_store_apps as p
+Using(name)
+Group By a.name, a.content_rating, p.name, p.content_rating
+Order by avg_combined_rating desc
+Limit 10;
+
+Select a.content_rating,
+    p.content_rating,
+    avg(a.rating+p.rating) as avg_combined_rating
+From app_store_apps as a
+Join play_store_apps as p
+Using(name)
+Group By a.content_rating, p.content_rating
+Order By avg_combined_rating desc;
+
+
+Select a.name,
+    p.name,
+    avg(a.rating+p.rating) as avg_combined_rating,
+       Case When a.content_rating =  '4+' Then 'Everyone'
+       When a.content_rating = '9+' Then 'Everyone'
+        When p.content_rating = 'Everyone' Then 'Everyone'
+        When p.content_rating = 'Everyone+' Then 'Everyone'
+        End As content_rating
+From app_store_apps as a
+Join play_store_apps as p
+Using (name)
+Where a.content_rating is not null and p.content_rating is not null
+Group by a.name,p.name,a.content_rating,p.content_rating
+Order By avg_combined_rating desc;
