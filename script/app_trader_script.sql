@@ -129,7 +129,7 @@ GROUP BY name, r1.revenue, p1.apple_purchase_price, p1.google_purchase_price, a2
 ORDER BY profit DESC;
 -- 
 
-
+-- Ratio of money spent to money earned:
 WITH purchase_price AS
    (SELECT DISTINCT name,
     CASE 
@@ -158,12 +158,12 @@ revenue AS
     ORDER BY revenue DESC)
 
 SELECT name, 
-(r1.revenue - (((p1.apple_purchase_price + p1.google_purchase_price) * 10000) + a2.ad_cost)) / 
-(((p1.apple_purchase_price + p1.google_purchase_price) * 10000) + a2.ad_cost) AS profit
+r1.revenue/(((p1.apple_purchase_price + p1.google_purchase_price) * 10000) + a2.ad_cost) AS ratio
 FROM play_store_apps as g1
 INNER JOIN app_store_apps as a1 USING(name)
 INNER JOIN purchase_price as p1 USING(name)
 INNER JOIN advertising_cost as a2 USING(name)
 INNER JOIN revenue as r1 USING(name)
 GROUP BY name, r1.revenue, p1.apple_purchase_price, p1.google_purchase_price, a2.ad_cost
-ORDER BY profit DESC;
+ORDER BY ratio DESC;
+-- 
