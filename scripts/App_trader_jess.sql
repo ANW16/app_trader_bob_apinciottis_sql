@@ -33,34 +33,42 @@ where rating is not null and review_count>50
 ORDER BY rating desc, review_count DESC;
 
 /*most installs from play store*/
-select a.name, rating, review_count
+select name, rating, review_count, genres
 from play_store_apps
 where rating is not NULL and review_count >50
 order by rating DESC, review_count DESC
 
 /*1st join on name*/
-select a.name, a.rating as apple_rating, p.rating as google_rating, a.review_count as apple_review_count , 
-p.review_count as google_review_count, a.primary_genre, p.genres
+select distinct(a.name), a.rating as apple_rating, p.rating as google_rating, a.review_count as apple_review_count , 
+p.review_count as google_review_count, a.primary_genre
 from app_store_apps as a
 LEFT JOIN play_store_apps as p
 on a.name = p.name
 where p.rating is not null
-order by apple_rating DESC, google_rating desc
+order by  google_rating desc,apple_rating DESC, google_review_count DESC
 
 
 /*sanity check
 select *
 from app_store_apps
 select *
-from play_store_apps
+from play_store_apps*/
 
-select distinct(primary_genre), avg(rating)
+select distinct(primary_genre), round(avg(rating))as avg_rating
 from app_store_apps
 group by primary_genre
-order by rating DESC
+order by avg_rating DESC
 
-select distinct(genres), count(name)
+select distinct(genres), round(avg(rating)) as avg_rating
 from play_store_apps
 group by genres
-order by count desc
+--where avg_rating IS NOT NULL
+order by avg_rating desc
+
+select primary_genre, sum(review_count)as sum_review
+from app_store_apps
+group by primary_genre
+order by sum_review desc
+
+
 
