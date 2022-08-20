@@ -176,24 +176,16 @@ WHERE a.price = 0.00 AND p.price = '0'
 GROUP BY name, primary_genre, category,genres, total_rating
 ORDER BY total_rating DESC;
 
-WITH t1 AS 
-(SELECT COUNT(name), category AS play_category, genres AS play_genres, primary_genre AS apple_genre, AVG(a.rating+p.rating) AS avg_rating
+
+SELECT COUNT(name), category AS play_category, genres AS play_genres, primary_genre AS apple_genre, AVG(a.rating+p.rating) AS avg_rating
 FROM play_store_apps AS p
 INNER JOIN app_store_apps AS a
 USING (name)
 WHERE a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
 GROUP BY play_category, play_genres, apple_genre
 HAVING COUNT(name) >= 10
-ORDER BY avg_rating DESC, COUNT(name) DESC)
+ORDER BY avg_rating DESC, COUNT(name) DESC;
                    
-SELECT p.name, avg_rating
-FROM play_store_apps AS p
-INNER JOIN t1
-ON p.category = t1.play_category
-INNER JOIN app_store_apps AS a
-ON a.primary_genre = t1.apple_genre
-WHERE play_category = 'Game' AND play_genres = 'Casual'
-ORDER BY avg_rating DESC;
                    
 SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
 FROM app_store_apps AS a
@@ -266,3 +258,19 @@ USING (name)
 WHERE p.category = 'TRAVEL_AND_LOCAL' AND p.genres = 'Travel & Local' AND a.primary_genre = 'Travel' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
 GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
 ORDER BY total_rating DESC;
+                   
+WITH dollars AS
+   (SELECT name, ROUND(((a.rating+p.rating)/2)*2,0)/2 AS rounded_rating, ((((ROUND(((a.rating+p.rating)/2)*2,0)/2)/.5+1)/2)*12)*2 AS advertising_months       
+   FROM app_store_apps AS a
+    INNER JOIN play_store_apps AS p
+    USING (name)
+WHERE a.price = 0.00 AND p.price = '0' 
+GROUP BY name, a.rating, p.rating
+ORDER BY advertising_months DESC)
+
+SELECT name, rounded_rating, ROUND(advertising_months,0) AS total_advertised_months, CAST(advertising_months*4000 AS money) total_revenue, CAST(advertising_months*4000 AS money)-CAST(20000 AS money) AS total_profit, install_count
+   FROM play_store_apps
+   INNER JOIN dollars
+   USING (name)
+GROUP BY name, rounded_rating, total_revenue, dollars.advertising_months, total_profit, play_store_apps.install_count
+ORDER BY total_profit DESC, install_count DESC;
