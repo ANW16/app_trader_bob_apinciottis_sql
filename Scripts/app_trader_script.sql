@@ -51,9 +51,11 @@ WHERE p.review_count > 1000
     AND p.rating >= 4
 ORDER BY p.install_count DESC;
 
-SELECT COUNT(name), genres, install_count
+SELECT COUNT(name), primary_genre, genres, category, install_count
 FROM play_store_apps
-GROUP BY genres, install_count
+INNER JOIN app_store_apps
+USING (name)
+GROUP BY primary_genre, genres, category, install_count
 ORDER BY COUNT(name) DESC;
 
 SELECT COUNT(name), a.content_rating AS app_rating, p.content_rating AS play_rating
@@ -75,14 +77,14 @@ FROM app_store_apps AS a
 INNER JOIN play_store_apps AS p
 USING (name)
 WHERE (a.rating+p.rating) >= 8.8 AND a.price = 0.00 AND p.price = '0'
-ORDER BY total_rating DESC;
+ORDER BY total_rating DESC, install_count DESC;
 
 SELECT name, a.price AS apple_price, p.price AS google_price, a.review_count AS apple_review_count, p.review_count AS google_review_count, p.install_count, a.rating AS apple_rating, p.rating AS google_rating, (a.rating+p.rating) AS total_rating, a.content_rating AS apple_content, p.content_rating AS google_content
 FROM app_store_apps AS a
-LEFT JOIN play_store_apps AS p
+INNER JOIN play_store_apps AS p
 USING (name)
 WHERE (a.rating+p.rating) >= 9 -- AND p.review_count > 1000
-ORDER BY total_rating DESC;
+ORDER BY total_rating DESC, install_count DESC;
 
 WITH profit AS 
     (SELECT name, 
@@ -141,3 +143,126 @@ SELECT name, ROUND(total_months/2,0) AS total_advertised_months, total_revenue, 
    USING (name)
 GROUP BY name, dollars.total_revenue, dollars.total_months, total_profit, play_store_apps.install_count
 ORDER BY total_profit DESC, install_count DESC;
+
+                   
+WITH dollars AS
+   (SELECT name, a.rating AS apple_rating, p.rating AS play_rating,
+       '20000' AS purchase_cost, ((a.rating/.5+1)*12) AS apple_longevity_months, (((ROUND(p.rating*2,0)/2)/.5+1)*12) AS play_longevity_months,
+       ((a.rating/.5+1)*12) +  (((ROUND(p.rating*2,0)/2)/.5+1)*12) AS total_months,
+    CAST((((a.rating/.5+1)*12)*2000)AS money) AS apple_revenue,
+    CAST(((((ROUND(p.rating*2,0)/2)/.5+1)*12)) AS money) * 2000 AS play_revenue
+       -- CAST((((a.rating/.5+1)*12) +  (((ROUND(p.rating*2,0)/2)/.5+1)*12)) AS money) * 2000 AS total_revenue           
+       FROM app_store_apps AS a
+    INNER JOIN play_store_apps AS p
+    USING (name)
+WHERE a.price = 0.00 AND p.price = '0' 
+GROUP BY name, a.rating, p.rating
+ORDER BY total_months DESC)
+
+SELECT name, ROUND(total_months/2,0) AS total_advertised_months, (apple_revenue+play_revenue)-CAST(purchase_cost AS money) AS total_profit, genres
+                  -- total_revenue-CAST(20000 AS money) AS total_profit, 
+                   install_count
+   FROM play_store_apps
+   INNER JOIN dollars
+   USING (name)
+GROUP BY name, total_advertised_months, total_profit, play_store_apps.install_count, genres
+ORDER BY total_profit DESC, install_count DESC;
+                   
+SELECT name, a.primary_genre, p.category, p.genres, a.rating+p.rating AS total_rating
+   FROM app_store_apps AS a
+   INNER JOIN play_store_apps AS p
+   USING (name)
+WHERE a.price = 0.00 AND p.price = '0' 
+GROUP BY name, primary_genre, category,genres, total_rating
+ORDER BY total_rating DESC;
+
+WITH t1 AS 
+(SELECT COUNT(name), category AS play_category, genres AS play_genres, primary_genre AS apple_genre, AVG(a.rating+p.rating) AS avg_rating
+FROM play_store_apps AS p
+INNER JOIN app_store_apps AS a
+USING (name)
+WHERE a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY play_category, play_genres, apple_genre
+HAVING COUNT(name) >= 10
+ORDER BY avg_rating DESC, COUNT(name) DESC)
+                   
+SELECT p.name, avg_rating
+FROM play_store_apps AS p
+INNER JOIN t1
+ON p.category = t1.play_category
+INNER JOIN app_store_apps AS a
+ON a.primary_genre = t1.apple_genre
+WHERE play_category = 'Game' AND play_genres = 'Casual'
+ORDER BY avg_rating DESC;
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'GAME' AND p.genres = 'Casual' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC;
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'FAMILY' AND p.genres = 'Casual' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC;
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'PRODUCTIVITY' AND p.genres = 'Productivity' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC;                  
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'COMMUNICATION' AND p.genres = 'Communication' AND a.primary_genre = 'Social Networking' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC;  
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'FOOD_AND_DRINK' AND p.genres = 'Food & Drink' AND a.primary_genre = 'Food & Drink' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC; 
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'NEWS_AND_MAGAZINES' AND p.genres = 'News & Magazines' AND a.primary_genre = 'News' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC;
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'ENTERTAINMENT' AND p.genres = 'Entertainment' AND a.primary_genre = 'Entertainment' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC;
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'SPORTS' AND p.genres = 'Sports' AND a.primary_genre = 'Sports' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC;
+                   
+SELECT name, (a.rating+p.rating) AS total_rating, p.category AS play_category, p.genres AS play_genres, a.primary_genre AS apple_genre
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name)
+WHERE p.category = 'TRAVEL_AND_LOCAL' AND p.genres = 'Travel & Local' AND a.primary_genre = 'Travel' AND a.rating IS NOT NULL AND p.rating IS NOT NULL AND p.price = '0' AND a.price = 0.00
+GROUP BY name, play_category, play_genres, apple_genre, a.rating, p.rating
+ORDER BY total_rating DESC;
