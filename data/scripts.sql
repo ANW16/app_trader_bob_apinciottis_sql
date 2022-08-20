@@ -1,7 +1,6 @@
-Select * From play_store_apps
-Join app_store_apps
-Using (name)
-order by  name desc;
+Select * From play_store_apps as p
+Join app_store_apps as a
+Using (name);
 
 Select * From app_store_apps;
 
@@ -21,19 +20,20 @@ Where rating is not null
 Group by genres, install_count
 Order by avg_rating desc
 Limit 10;
+
 --Top 10 "Apple Store" genres by AVG rating....
 Select distinct primary_genre, round(avg(rating),2) as avg_rating, review_count
 From app_store_apps
 Where rating is not null
 Group by primary_genre, review_count
 Order by avg_rating desc
-Limit 10;
+LImit 10;
 --top genres by install/review count and price.....
 Select genres as Playstore_genres, money(p.price), p.install_count, primary_genre as Google_genres, money(a.price), a.review_count
 From play_store_apps as p
 Join app_store_apps as a
 Using(name)
-Order by money(p.price) desc, money(a.price) desc;
+Order by install_count desc, review_count desc;
 
 
 
@@ -51,6 +51,7 @@ Where p.name = a.name
 Order By p.name,a.name desc;
 
 -- Projected Longevity(Apps in both stores AND apps with rating >= 3.5 in both stores)
+
 Select distinct p.name, round(p.rating*2,0)/2 as Playstore_rating, 
     Case When Round(p.rating*2,0)/2 = '0' Then '12mo'
         When Round(p.rating*2,0)/2 = '0.5' Then '24mo'
@@ -76,18 +77,19 @@ Select distinct p.name, round(p.rating*2,0)/2 as Playstore_rating,
         When Round(a.rating*2,0)/2 = '4.0' Then '108mo'
         When Round(a.rating*2,0)/2 = '4.5' Then '120mos'
         When Round(a.rating*2,0)/2 = '5.0' Then '132mo'
-        End as Apple_Projected_Longevity   
+        End as Apple_Projected_Longevity,
+    avg(p.rating+a.rating) as avg_combined_rating
 From play_store_apps as p
 Join app_store_apps as a
 Using (name)
 Where p.rating >= '3.5'
     And a.rating >= '3.5'
 Group by p.name,p.rating,a.name,a.rating
-Order by playstore_projected_longevity, apple_projected_longevity desc;
+Order by  avg_combined_rating desc;
 
 --Top 10 apps w/ content_rating by avg_combined_rating
 Select a.name,
-    a.content_rating,
+    
     p.name,
     p.content_rating,
     avg(a.rating+p.rating) as avg_combined_rating
@@ -119,6 +121,16 @@ Select a.name,
 From app_store_apps as a
 Join play_store_apps as p
 Using (name)
-Where a.content_rating is not null and p.content_rating is not null
 Group by a.name,p.name,a.content_rating,p.content_rating
 Order By avg_combined_rating desc;
+
+Select distinct a.content_rating as Apple_content_rating,
+       p.content_rating as Google_content_rating,
+     count(p.content_rating) + count(a.content_rating) as Combined_content_count
+From app_store_apps as a
+Join play_store_apps as p
+Using (name)
+Group by distinct a.content_rating , p.content_rating ;
+
+
+Select *
